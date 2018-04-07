@@ -103,6 +103,8 @@ public class MenuItem implements Serializable {
         ArrayList<MenuItem> childList = (ArrayList<MenuItem>) nextLevel;
         if (this.id.compareTo(id) == 0)
             return this;
+        if (nextLevel == null || nextLevel.isEmpty())
+            return null;
         else {
             for (MenuItem item : childList) {
                 MenuItem rs = item.getMenuItemById(id);

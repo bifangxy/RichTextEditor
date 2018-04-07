@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">RichTextEditor</string>
+    <string name="input_link_url">请输入链接地址</string>
+    <string name="operate">操作</string>
+    <string name="input_link_name">请输入链接名称</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确认</string>
 </resources>

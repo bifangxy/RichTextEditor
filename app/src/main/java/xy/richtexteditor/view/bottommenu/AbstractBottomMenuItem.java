@@ -17,36 +17,44 @@ import xy.richtexteditor.theme.ITheme;
 public abstract class AbstractBottomMenuItem<T extends View> implements IBottomMenuItem, Parcelable, Serializable {
 
     private MenuItem mMenuItem;
-
     private boolean isSelected = false;
-
     private transient Context mContext;
-
     private ITheme mTheme;
 
     private OnItemClickListener onItemClickListener;
 
-    public AbstractBottomMenuItem(Context mContext, MenuItem mMenuItem) {
-        this.mContext = mContext;
-        this.mMenuItem = mMenuItem;
+    public AbstractBottomMenuItem(Context context, MenuItem menuItem) {
+        mMenuItem = menuItem;
         isSelected = false;
+        mContext = context;
     }
 
+    /**
+     * 这个函数在视图被添加进父菜单行是执行
+     * 对内部View进行创建和设置
+     *
+     * @hide
+     */
     public void onDisplayPrepare() {
-        View view = mMenuItem.getContentView();
-        if (view == null) {
+        View v = mMenuItem.getContentView();
+
+        if (v == null)
             mMenuItem.setContentView(createView());
-        }
-        settingAfterCreate(isSelected, (T) mMenuItem.getContentView());
+
+        //noinspection unchecked
+        settingAfterCreate(isSelected, (T) (mMenuItem.getContentView()));
 
         mMenuItem.getContentView().setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
                 onItemClick();
             }
         });
     }
 
+    /**
+     * 从LuBottomMenu移除时的工作
+     */
     public void onViewDestroy() {
         if (getMainView() != null) {
             getMainView().setOnClickListener(null);
@@ -54,15 +62,27 @@ public abstract class AbstractBottomMenuItem<T extends View> implements IBottomM
         }
     }
 
+    /**
+     * @return 创建的View
+     */
     @NonNull
     public abstract T createView();
 
+    /**
+     * @param isSelected 是否被选择
+     * @param view       要处理的视图
+     *                   创建视图后的设置工作
+     */
     public abstract void settingAfterCreate(boolean isSelected, T view);
 
-    public void onSelectChange(boolean isSelected) {
-
+    public void onSelectChanged(boolean isSelected) {
+        //do nothing
     }
 
+    /**
+     * @return 是否拦截
+     * 拦截从LuBottomMenu的监听事件（其分发的点击事件）
+     */
     public boolean onItemClickIntercept() {
         return false;
     }
@@ -87,9 +107,9 @@ public abstract class AbstractBottomMenuItem<T extends View> implements IBottomM
     }
 
     public final void setSelected(boolean selected) {
-        if (selected != isSelected) {
-            this.isSelected = selected;
-        }
+        if (selected != isSelected)
+            onSelectChanged(selected);
+        isSelected = selected;
     }
 
     public boolean isSelected() {
@@ -132,18 +152,18 @@ public abstract class AbstractBottomMenuItem<T extends View> implements IBottomM
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeSerializable(this.mMenuItem);
-        parcel.writeByte(this.isSelected ? (byte) 1 : (byte) 0);
-        parcel.writeParcelable(this.mTheme, i);
-        parcel.writeParcelable(this.onItemClickListener, i);
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeSerializable(this.mMenuItem);
+        dest.writeByte(this.isSelected ? (byte) 1 : (byte) 0);
+        dest.writeParcelable(this.mTheme, flags);
+        dest.writeParcelable(this.onItemClickListener, flags);
     }
 
-    protected AbstractBottomMenuItem(Parcel parcel) {
-        this.mMenuItem = (MenuItem) parcel.readSerializable();
-        this.isSelected = parcel.readByte() != 0;
-        this.mTheme = parcel.readParcelable(ITheme.class.getClassLoader());
-        this.onItemClickListener = parcel.readParcelable(OnItemClickListener.class.getClassLoader());
+    protected AbstractBottomMenuItem(Parcel in) {
+        this.mMenuItem = (MenuItem) in.readSerializable();
+        this.isSelected = in.readByte() != 0;
+        this.mTheme = in.readParcelable(ITheme.class.getClassLoader());
+        this.onItemClickListener = in.readParcelable(OnItemClickListener.class.getClassLoader());
     }
 
     public abstract static class OnItemClickListener implements OnItemCLickListenerParcelable {
@@ -151,10 +171,15 @@ public abstract class AbstractBottomMenuItem<T extends View> implements IBottomM
         @Override
         public abstract void onItemClick(MenuItem item);
 
-        @Override
-        public abstract int describeContents();
 
         @Override
-        public abstract void writeToParcel(Parcel parcel, int i);
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+        }
     }
 }

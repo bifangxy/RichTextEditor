@@ -56,40 +56,45 @@ public class RichEditor extends WebView {
 
     private long mContentLength;
 
+    protected EditorWebViewClient createWebViewClient() {
+        return new EditorWebViewClient();
+    }
 
-    public void setmTextChangeListener(OnTextChangeListener mTextChangeListener) {
+
+    public void setOnTextChangeListener(OnTextChangeListener mTextChangeListener) {
         this.mTextChangeListener = mTextChangeListener;
     }
 
-    public void setmStateChangeListener(OnStateChangeListener mStateChangeListener) {
-        this.mStateChangeListener = mStateChangeListener;
-    }
-
-    public void setmLinkClickListener(OnLinkClickListener mLinkClickListener) {
-        this.mLinkClickListener = mLinkClickListener;
-    }
-
-    public void setmFocusChangeListener(OnFocusChangeListener mFocusChangeListener) {
-        this.mFocusChangeListener = mFocusChangeListener;
-    }
-
-    public void setmLoadListener(OnLoadListener mLoadListener) {
-        this.mLoadListener = mLoadListener;
-    }
-
-    public void setmImageClickListener(OnImageClickListener mImageClickListener) {
-        this.mImageClickListener = mImageClickListener;
-    }
-
-    public void setmTextLengthChangeListener(OnTextLengthChangeListener mTextLengthChangeListener) {
+    public void setOnTextLengthChangeListener(OnTextLengthChangeListener mTextLengthChangeListener) {
         this.mTextLengthChangeListener = mTextLengthChangeListener;
     }
 
-    public OnScrollChangedCallback getmScrollChangeCallback() {
+    public void setOnStateChangeListener(OnStateChangeListener mStateChangeListener) {
+        this.mStateChangeListener = mStateChangeListener;
+    }
+
+    public void setOnLinkClickListener(OnLinkClickListener mLinkClickListener) {
+        this.mLinkClickListener = mLinkClickListener;
+    }
+
+    public void setOnFocusChangeListener(OnFocusChangeListener mFocusChangeListener) {
+        this.mFocusChangeListener = mFocusChangeListener;
+    }
+
+    public void setOnLoadListener(OnLoadListener mLoadListener) {
+        this.mLoadListener = mLoadListener;
+    }
+
+    public void setOnImageClickListener(OnImageClickListener mImageClickListener) {
+        this.mImageClickListener = mImageClickListener;
+    }
+
+
+    public OnScrollChangedCallback getOnScrollChangeCallback() {
         return mScrollChangeCallback;
     }
 
-    public void setmScrollChangeCallback(OnScrollChangedCallback mScrollChangeCallback) {
+    public void setOnScrollChangeCallback(OnScrollChangedCallback mScrollChangeCallback) {
         this.mScrollChangeCallback = mScrollChangeCallback;
     }
 
@@ -223,6 +228,17 @@ public class RichEditor extends WebView {
     public void setStrikeThrough() {
         exec("javascript:RE.saveRange();");
         exec("javascript:RE.exec('strikethrough');");
+    }
+
+    public void setBlockquote(boolean b) {
+        exec("javascript:RE.saveRange();");
+        if (b) {
+            exec("javascript:RE.exec('blockquote');");
+        } else {
+            exec("javascript:RE.exec('p');");
+        }
+
+
     }
 
     public void setHeading(int heading, boolean b) {
@@ -422,7 +438,7 @@ public class RichEditor extends WebView {
     }
 
     public interface OnImageClickListener {
-        void onImageClick(Long url);
+        void onImageClick(Long id);
     }
 
     public interface OnTextLengthChangeListener {

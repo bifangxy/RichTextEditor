@@ -11,6 +11,9 @@ public interface IMultiMenu {
 
     void hide(long last);
 
+    IMultiMenu addRootItem(AbstractBottomMenuItem abstractBottomMenuItem);
+
+    IMultiMenu addItem(long parentId, AbstractBottomMenuItem abstractBottomMenuItem);
 
 
 }
