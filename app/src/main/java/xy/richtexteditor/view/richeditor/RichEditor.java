@@ -69,7 +69,7 @@ public class RichEditor extends WebView {
         this.mTextLengthChangeListener = mTextLengthChangeListener;
     }
 
-    public void setOnStateChangeListener(OnStateChangeListener mStateChangeListener) {
+    public void setOnDecorationChangeListener(OnStateChangeListener mStateChangeListener) {
         this.mStateChangeListener = mStateChangeListener;
     }
 
@@ -267,12 +267,12 @@ public class RichEditor extends WebView {
 
     public void insertLink(String href, String title) {
         exec("javascript:RE.Range();");
-        exec("javascript:RE.insertLink('" + title + "', " + href + "');");
+        exec("javascript:RE.insertLink('" + title + "', '" + href + "');");
     }
 
     public void changeLink(String href, String title) {
         exec("javascript:RE.Range();");
-        exec("javascript:RE.changeLink('" + title + "', " + href + "');");
+        exec("javascript:RE.changeLink('" + title + "', '" + href + "');");
     }
 
     public void insertTodo() {
@@ -281,7 +281,7 @@ public class RichEditor extends WebView {
     }
 
     public void setImageUploadProcess(long id, int process) {
-        exec("javascript:RE.changeProcess(" + id + "', " + process + ");");
+        exec("javascript:RE.changeProcess(" + id + "', '" + process + ");");
     }
 
     public void setImageFailed(long id) {

@@ -94,7 +94,7 @@ public class MyRichEditor extends RichEditor {
 
     private void initRichTextViewListener() {
 
-        setOnStateChangeListener(new OnStateChangeListener() {
+        setOnDecorationChangeListener(new OnStateChangeListener() {
             @Override
             public void onStateChangeListener(String text, List<Type> types) {
                 onStateChange(text, types);
@@ -151,7 +151,7 @@ public class MyRichEditor extends RichEditor {
 
     public MyRichEditor addTypefaceBranch(boolean needBold, boolean needItalic, boolean needStrikeThrough, boolean needBlockQuote, boolean needH) {
         checkNull(mMultiBottomMenu);
-        if (!needBold || !needItalic || !needStrikeThrough || !needBlockQuote || !needH)
+        if (!(needBold || needItalic || needStrikeThrough || needBlockQuote || needH))
             return this;
         if (needBlockQuote)
             mSelectController.add(ItemIndex.BLOCK_QUOTE);
