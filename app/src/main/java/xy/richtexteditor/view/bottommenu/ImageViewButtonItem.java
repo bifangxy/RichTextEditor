@@ -17,65 +17,77 @@ import xy.richtexteditor.R;
  * Function:
  */
 public class ImageViewButtonItem extends AbstractBottomMenuItem<ImageButton> implements Parcelable {
-    private int idRes;
-    private boolean enableAutoSet = true;//点击后根据是否选中自动设置显示的效果
-    private OnBottomItemClickListener mOnItemClickListener;
 
-    public ImageViewButtonItem(Context context, MenuItem menuItem, int idRes) {
-        this(context, menuItem, idRes, true);
+    private int idRes;
+
+    private boolean enableAutoSet = true;
+
+    private OnBottomItemClickListener mOnItemCLickListener;
+
+
+    public ImageViewButtonItem(Context mContext, MenuItem mMenuItem, int idRes) {
+        this(mContext, mMenuItem, idRes, true);
     }
 
-    public ImageViewButtonItem(Context context, MenuItem menuItem, int idRes, boolean enableAutoSet) {
-        super(context, menuItem);
+    public ImageViewButtonItem(Context mContext, MenuItem mMenuItem, int idRes, boolean enableAutoSet) {
+
+        super(mContext, mMenuItem);
         this.idRes = idRes;
         this.enableAutoSet = enableAutoSet;
+    }
+
+    protected ImageViewButtonItem(Parcel parcel) {
+        super(parcel);
+        this.idRes = parcel.readInt();
+        this.enableAutoSet = parcel.readInt() == 1;
     }
 
     @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public ImageButton createView() {
-        ImageButton imageViewButton = new ImageButton(getContext());
-        if(!enableAutoSet) {
-            //无边框的带有水波纹的按钮样式
+        ImageButton imageButton = new ImageButton(getContext());
+        if (!enableAutoSet) {
             TypedArray typedArray = getContext().obtainStyledAttributes(new int[]{R.attr.selectableItemBackgroundBorderless});
             Drawable drawable = typedArray.getDrawable(0);
-            imageViewButton.setBackgroundDrawable(drawable);
+            imageButton.setBackgroundDrawable(drawable);
             typedArray.recycle();
-        }else
-            imageViewButton.setBackgroundDrawable(null);
+        } else {
+            imageButton.setBackgroundDrawable(null);
+        }
+        imageButton.setImageResource(idRes);
+        imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 
-        imageViewButton.setImageResource(idRes);
-        imageViewButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        return imageViewButton;
+        return imageButton;
     }
 
     @Override
-    public void settingAfterCreate(boolean isSelected, final ImageButton imageViewButton) {
+    public void settingAfterCreate(boolean isSelected, ImageButton view) {
         if (enableAutoSet) {
             if (isSelected) {
-                imageViewButton.setColorFilter(getTheme().getAccentColor(), PorterDuff.Mode.SRC_IN);
+                view.setColorFilter(getTheme().getAccentColor(), PorterDuff.Mode.SRC_IN);
             } else {
-                imageViewButton.setColorFilter(getTheme().getNormalColor(), PorterDuff.Mode.SRC_IN);
+                view.setColorFilter(getTheme().getNormalColor(), PorterDuff.Mode.SRC_IN);
             }
-        }else {
-            imageViewButton.setColorFilter(getTheme().getNormalColor(), PorterDuff.Mode.SRC_IN);
+        } else {
+            view.setColorFilter(getTheme().getNormalColor(), PorterDuff.Mode.SRC_IN);
         }
     }
 
-    //自己有点击事件时根据自身的返回值拦截，否则父类方法始终返回false不拦截
     @Override
     public boolean onItemClickIntercept() {
-        return mOnItemClickListener == null ? super.onItemClickIntercept():
-                mOnItemClickListener.onItemClick(getMenuItem(),isSelected());
+        return mOnItemCLickListener == null ? super.onItemClickIntercept() :
+                mOnItemCLickListener.onItemClick(getMenuItem(), isSelected());
     }
 
     @Override
-    public void onSelectChanged(boolean isSelected) {
-        ImageButton imageViewButton = getMainView();
-        if (imageViewButton == null) return;
-        settingAfterCreate(isSelected, imageViewButton);
+    public void onSelectChange(boolean isSelected) {
+        ImageButton imageButton = getMainView();
+        if (imageButton == null)
+            return;
+        settingAfterCreate(isSelected, imageButton);
     }
+
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
@@ -84,16 +96,15 @@ public class ImageViewButtonItem extends AbstractBottomMenuItem<ImageButton> imp
         dest.writeInt(this.enableAutoSet ? 1 : 0);
     }
 
-    protected ImageViewButtonItem(Parcel in) {
-        super(in);
-        this.idRes = in.readInt();
-        this.enableAutoSet = in.readInt() == 1;
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<ImageViewButtonItem> CREATOR = new Creator<ImageViewButtonItem>() {
         @Override
-        public ImageViewButtonItem createFromParcel(Parcel source) {
-            return new ImageViewButtonItem(source);
+        public ImageViewButtonItem createFromParcel(Parcel in) {
+            return new ImageViewButtonItem(in);
         }
 
         @Override
@@ -110,7 +121,7 @@ public class ImageViewButtonItem extends AbstractBottomMenuItem<ImageButton> imp
         this.enableAutoSet = enableAutoSet;
     }
 
-    public void setOnItemClickListener(OnBottomItemClickListener mOnItemClickListener) {
-        this.mOnItemClickListener = mOnItemClickListener;
+    public void setOnItemCLickListener(OnBottomItemClickListener mOnItemCLickListener) {
+        this.mOnItemCLickListener = mOnItemCLickListener;
     }
 }

@@ -38,11 +38,11 @@ public class TextViewItem extends AbstractBottomMenuItem<TextView> {
 
     @Override
     public void settingAfterCreate(boolean isSelected, TextView view) {
-        onSelectChanged(isSelected);
+        onSelectChange(isSelected);
     }
 
     @Override
-    public void onSelectChanged(boolean isSelected) {
+    public void onSelectChange(boolean isSelected) {
 
         TextView textView = (TextView) getMainView();
         if (textView != null) {
