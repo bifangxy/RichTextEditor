@@ -1,10 +1,22 @@
 package xy.richtexteditor.activity;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -17,13 +29,35 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.HashMap;
+import com.lzy.okgo.OkGo;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Progress;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.engine.impl.GlideEngine;
+import com.zhihu.matisse.filter.Filter;
+import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import xy.richtexteditor.R;
 import xy.richtexteditor.dialog.LinkDialog;
 import xy.richtexteditor.theme.BaseTheme;
 import xy.richtexteditor.theme.DarkTheme;
 import xy.richtexteditor.theme.LightTheme;
+import xy.richtexteditor.utils.RealPathFromUriUtils;
+import xy.richtexteditor.utils.SizeUtils;
 import xy.richtexteditor.view.bottommenu.BottomMenu;
 import xy.richtexteditor.view.richeditor.MyRichEditor;
 import xy.richtexteditor.view.richeditor.RichEditor;
@@ -34,7 +68,14 @@ import xy.richtexteditor.view.richeditor.RichEditor;
  */
 public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEditorClickListener, View.OnClickListener {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    private static final int REQUEST_CODE_IMAGE = 101;
+
+    private static final int REQUEST_CODE_IMAGE = 0x101;
+
+    private static final int REQUEST_CAMERA_PERMISSION = 0x102;
+
+    private static final int REQUEST_WRITE_PERMISSION = 0x103;
+
+    private static final int REQUEST_CAMERAA_AND_WRITR_PERMISSION = 0x104;
 
     private Context mContext;
 
@@ -54,6 +95,11 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             switch (msg.what) {
                 case 1:
                     tv_count.setText(msg.arg1 + "字");
+                    break;
+                case 2:
+                    String path = (String) msg.obj;
+                    upload(path);
+//                    mRichEditor.setImageUploadProcess(id, 80);
                     break;
             }
             return false;
@@ -107,6 +153,17 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
     }
 
     private void showImagePicker() {
+
+        Matisse.from(MainActivity.this)
+                .choose(MimeType.allOf())
+                .countable(true)
+                .maxSelectable(1)
+                .capture(true)
+                .captureStrategy(new CaptureStrategy(true, "xy.richtexteditor.fileprovider"))
+                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+                .thumbnailScale(0.85f)
+                .imageEngine(new GlideEngine())
+                .forResult(REQUEST_CODE_IMAGE);
     }
 
     private void showLinkDialog(LinkDialog linkDialog, final boolean isChange) {
@@ -139,7 +196,9 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     @Override
     public void onInsertImageButtonClick() {
-        showImagePicker();
+        if (checkPermission()) {
+            showImagePicker();
+        }
     }
 
     @Override
@@ -178,7 +237,103 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             case R.id.iv_return:
                 break;
             case R.id.tv_submit:
+                Log.d(LOG_TAG, "---" + mRichEditor.getHtml());
                 break;
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_IMAGE) {
+            List<Uri> result = Matisse.obtainResult(data);
+            String path = RealPathFromUriUtils.getRealPathFromUri(mContext, result.get(0));
+            Log.d(LOG_TAG, "----" + RealPathFromUriUtils.getRealPathFromUri(mContext, result.get(0)));
+            long id = SystemClock.currentThreadTimeMillis();
+            long size[] = SizeUtils.getBitmapSize(path);
+            mRichEditor.insertImage(path, id, size[0], size[1]);
+            mInsertedImages.put(id, path);
+            Message message = new Message();
+            message.obj = path;
+            message.what = 2;
+            mHandler.sendMessageDelayed(message, 2000);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_CAMERA_PERMISSION:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    showImagePicker();
+                } else {
+                    Toast.makeText(mContext, "无法获取到拍照权限", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case REQUEST_WRITE_PERMISSION:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    showImagePicker();
+                } else {
+                    Toast.makeText(mContext, "无法获取到拍照权限", Toast.LENGTH_SHORT).show();
+                }
+
+                break;
+            case REQUEST_CAMERAA_AND_WRITR_PERMISSION:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    showImagePicker();
+                } else {
+                    Toast.makeText(mContext, "无法获取到权限", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    private boolean checkPermission() {
+        boolean isHasWritePermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean isHasCameraPermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        if (!isHasWritePermission || !isHasCameraPermission) {
+            if (isHasWritePermission) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA},
+                        REQUEST_CAMERA_PERMISSION);
+                return false;
+            } else if (isHasCameraPermission) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE_PERMISSION);
+                return false;
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
+                        REQUEST_CAMERAA_AND_WRITR_PERMISSION);
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    private void upload(String filePath) {
+        OkGo.<String>post("http://47.52.227.43/zhuwai365/api/v2/public/api.php/Ajax/uploadpic")
+                .tag(this)
+                .params("file", new File(filePath))
+                .execute(new StringCallback() {
+                    @Override
+                    public void onSuccess(com.lzy.okgo.model.Response<String> response) {
+
+                    }
+
+                    @Override
+                    public void uploadProgress(Progress progress) {
+                        super.uploadProgress(progress);
+                    }
+
+                    @Override
+                    public void onError(com.lzy.okgo.model.Response<String> response) {
+                        super.onError(response);
+                    }
+                });
+    }
+
 }

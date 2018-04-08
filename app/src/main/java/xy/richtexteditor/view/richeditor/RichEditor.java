@@ -216,62 +216,66 @@ public class RichEditor extends WebView {
     }
 
     public void setBold() {
+
         exec("javascript:RE.saveRange();");
         exec("javascript:RE.exec('bold');");
     }
 
+    public void setHtml(String html){
+        //exec("javascript:RE.set");
+    }
+
     public void setItalic() {
         exec("javascript:RE.saveRange();");
-        exec("javascript:RE.exec('italic')");
+        exec("javascript:RE.exec('italic');");
     }
 
     public void setStrikeThrough() {
-        exec("javascript:RE.saveRange();");
+        exec("javascript:RE.saveRange()");
         exec("javascript:RE.exec('strikethrough');");
-    }
-
-    public void setBlockquote(boolean b) {
-        exec("javascript:RE.saveRange();");
-        if (b) {
-            exec("javascript:RE.exec('blockquote');");
-        } else {
-            exec("javascript:RE.exec('p');");
-        }
-
-
     }
 
     public void setHeading(int heading, boolean b) {
         exec("javascript:RE.saveRange();");
-        if (b) {
-            exec("javascript:RE.exec('h" + heading + "');");
-        } else {
-            exec("javascript:RE.exec('p');");
+        if (b){
+            exec("javascript:RE.exec('h"+heading+"')");
+        }else {
+            exec("javascript:RE.exec('p')");
         }
     }
 
-    public void insertImage(String url, long id, long width, long height) {
+    public void setBlockquote(boolean b) {
         exec("javascript:RE.saveRange();");
-        exec("javascript:RE.insertImage('" + url + "'," + id + ", " + width + "," + height + ");");
+        if(b){
+            exec("javascript:RE.exec('blockquote')");
+        }else {
+            exec("javascript:RE.exec('p')");
+        }
     }
 
-    public void deleteImageById(long id) {
+    public void insertImage(String url,Long id, long width ,long height) {
         exec("javascript:RE.saveRange();");
-        exec("javascript:RE.removeImage(" + id + ");");
+        exec("javascript:RE.insertImage('" + url +"',"+ id + ", " + width + ","+ height + ");");
+    }
+
+    public void deleteImageById(Long id){
+        exec("javascript:RE.saveRange();");
+        exec("javascript:RE.removeImage("+id+");");
     }
 
     public void insertLine() {
-        exec("javascript:RE.Range();");
+        exec("javascript:RE.saveRange();");
         exec("javascript:RE.insertLine();");
     }
 
+
     public void insertLink(String href, String title) {
-        exec("javascript:RE.Range();");
+        exec("javascript:RE.saveRange();");
         exec("javascript:RE.insertLink('" + title + "', '" + href + "');");
     }
 
     public void changeLink(String href, String title) {
-        exec("javascript:RE.Range();");
+        exec("javascript:RE.saveRange();");
         exec("javascript:RE.changeLink('" + title + "', '" + href + "');");
     }
 
@@ -280,16 +284,16 @@ public class RichEditor extends WebView {
         exec("javascript:RE.setTodo('" + Utils.getCurrentTime() + "');");
     }
 
-    public void setImageUploadProcess(long id, int process) {
-        exec("javascript:RE.changeProcess(" + id + "', '" + process + ");");
+    public void setImageUploadProcess(long id,int process){
+        exec("javascript:RE.changeProcess("+ id +", "+ process +");");
     }
 
-    public void setImageFailed(long id) {
-        exec("javascript:RE.uploadFailure(" + id + ");");
+    public void setImageFailed(long id){
+        exec("javascript:RE.uploadFailure("+ id +");");
     }
 
-    public void setImageReload(long id) {
-        exec("javascript:RE.uploadReload(" + id + ");");
+    public void setImageReload(long id){
+        exec("javascript:RE.uploadReload("+ id +");");
     }
 
     public void focusEditor() {
