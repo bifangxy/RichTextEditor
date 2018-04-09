@@ -97,9 +97,21 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                     tv_count.setText(msg.arg1 + "字");
                     break;
                 case 2:
-                    String path = (String) msg.obj;
-                    upload(path);
+//                    String path = (String) msg.obj;
+//                    upload(path);
 //                    mRichEditor.setImageUploadProcess(id, 80);
+                    break;
+                case 3:
+                    long id = (long) msg.obj;
+//                    Log.d(LOG_TAG, "---" + id);
+//                    mRichEditor.deleteImageById(id);
+//
+//                    String uri = "http://seopic.699pic.com/photo/00013/6254.jpg_wh1200.jpg";
+//                    long ids = SystemClock.currentThreadTimeMillis();
+//                    long size[] = SizeUtils.getBitmapSize(uri);
+//                    mRichEditor.insertImage(uri, ids, 340, 223);
+                    mRichEditor.setImageUploadProcess(id, 100);
+                    mRichEditor.uploadImage(id, "http://seopic.699pic.com/photo/00013/6254.jpg_wh1200.jpg");
                     break;
             }
             return false;
@@ -133,6 +145,8 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         mInsertedImages = new HashMap<>();
         mFailedImages = new HashMap<>();
         mRichEditor.setBottomMenu(mBottomMenu);
+
+        mRichEditor.setHtml("sseerrrrrr");
     }
 
     private void initListener() {
@@ -247,15 +261,20 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_IMAGE) {
             List<Uri> result = Matisse.obtainResult(data);
-            String path = RealPathFromUriUtils.getRealPathFromUri(mContext, result.get(0));
-            Log.d(LOG_TAG, "----" + RealPathFromUriUtils.getRealPathFromUri(mContext, result.get(0)));
+            String path = getRealPath(result.get(0));
             long id = SystemClock.currentThreadTimeMillis();
             long size[] = SizeUtils.getBitmapSize(path);
             mRichEditor.insertImage(path, id, size[0], size[1]);
             mInsertedImages.put(id, path);
+//            Message message = new Message();
+//            message.obj = path;
+//            message.what = 2;
+//            mHandler.sendMessageDelayed(message, 2000);
+            Log.d(LOG_TAG, "---" + id);
+
             Message message = new Message();
-            message.obj = path;
-            message.what = 2;
+            message.obj = id;
+            message.what = 3;
             mHandler.sendMessageDelayed(message, 2000);
         }
     }
@@ -336,4 +355,27 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                 });
     }
 
+    //针对知乎图片选择框架拍照返回获取不到path
+    private String getRealPath(Uri uri) {
+        String path = RealPathFromUriUtils.getRealPathFromUri(mContext, uri);
+        if (TextUtils.isEmpty(path)) {
+            if (uri != null) {
+                String uriString = uri.toString();
+                int index = uriString.lastIndexOf("/");
+                String imageName = uriString.substring(index);
+                File storageDir;
+                storageDir = Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_PICTURES);
+                File file = new File(storageDir, imageName);
+                if (file.exists()) {
+                    path = file.getAbsolutePath();
+                } else {
+                    storageDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                    File file1 = new File(storageDir, imageName);
+                    path = file1.getAbsolutePath();
+                }
+            }
+        }
+        return path;
+    }
 }
