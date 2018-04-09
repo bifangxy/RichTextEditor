@@ -274,7 +274,8 @@ var RE = {
 	},
 	insertHtml: function insertHtml(html) {
 		var _self = this;
-		document.execCommand('insertHtml', false, html);
+		console.log(html)
+		document.execCommand('insertHTML', false, html);
 	},
 	setBackgroundColor: function setBackgroundColor(color) {
 	    var _self = this;
@@ -355,8 +356,10 @@ var RE = {
 			var cover = block.querySelector('.cover');
 			var process = block.querySelector('.process');
 			var imgBlock = block.querySelector('.img-block');
+			var deleteImage = block.querySelector('.delete')
 			imgBlock.removeChild(cover);
 			imgBlock.removeChild(process);
+			imgBlock.removeChild(deleteImage);
 		}
 
 	},

@@ -6,6 +6,7 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -56,9 +57,7 @@ public class RichEditor extends WebView {
 
     private long mContentLength;
 
-    protected EditorWebViewClient createWebViewClient() {
-        return new EditorWebViewClient();
-    }
+    private String returnValue;
 
 
     public void setOnTextChangeListener(OnTextChangeListener mTextChangeListener) {
@@ -222,7 +221,11 @@ public class RichEditor extends WebView {
     }
 
     public void setHtml(String html) {
-        exec("javascript:RE.set");
+        exec("javascript:RE.insertHtml('" + html + "');");
+    }
+
+    public void getTitles() {
+        exec("javascript:RE.getTitle();");
     }
 
     public void setItalic() {
@@ -281,7 +284,7 @@ public class RichEditor extends WebView {
 
     public void uploadImage(long id, String url) {
 //        exec("javascript:RE.saveRange();");
-        exec("javascript:RE.uploadImage('" + id + "', '" + url + "');");
+        exec("javascript:RE.uploadImage(" + id + ", '" + url + "');");
     }
 
     public void insertTodo() {
@@ -290,7 +293,7 @@ public class RichEditor extends WebView {
     }
 
     public void setImageUploadProcess(long id, int process) {
-        exec("javascript:RE.changeProcess('" + id + "', '" + process + "');");
+        exec("javascript:RE.changeProcess(" + id + ", '" + process + "');");
     }
 
     public void setImageFailed(long id) {
@@ -323,6 +326,20 @@ public class RichEditor extends WebView {
         }
     }
 
+    /*protected String execForReturn(final String trigger) {
+        if (isReady) {
+            return loadForReturn(trigger);
+        } else {
+            postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    exec(trigger);
+                }
+            }, 100);
+            return null;
+        }
+    }*/
+
     private void load(String trigger) {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
             evaluateJavascript(trigger, null);
@@ -330,6 +347,20 @@ public class RichEditor extends WebView {
             loadUrl(trigger);
         }
     }
+
+    /*private String loadForReturn(String trigger) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+            evaluateJavascript(trigger, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    returnValue = value;
+                }
+            });
+        } else {
+            loadUrl(trigger);
+        }
+        return returnValue;
+    }*/
 
     private class EditorWebViewClient extends WebViewClient {
 
@@ -375,7 +406,7 @@ public class RichEditor extends WebView {
     private class Android4JsInterface {
 
         @JavascriptInterface
-        public void setViewEnable(boolean enable) {
+        public void setViewEnabled(boolean enable) {
             if (mFocusChangeListener != null) {
                 mFocusChangeListener.onFocusChange(enable);
             }

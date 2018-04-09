@@ -13,7 +13,7 @@ import xy.richtexteditor.R;
  * Function:
  */
 public class PictureDialog extends AppCompatDialogFragment {
-    private static final String LOG_TAG = PictureDialog.class.getSimpleName();
+    public static final String LOG_TAG = PictureDialog.class.getSimpleName();
 
     private long imageId;
 

@@ -7,52 +7,42 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.lzy.okgo.OkGo;
+import com.lzy.okgo.adapter.Call;
+import com.lzy.okgo.callback.Callback;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Progress;
+import com.lzy.okgo.model.Response;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
-import com.zhihu.matisse.filter.Filter;
 import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import xy.richtexteditor.R;
 import xy.richtexteditor.dialog.LinkDialog;
+import xy.richtexteditor.dialog.PictureDialog;
 import xy.richtexteditor.theme.BaseTheme;
 import xy.richtexteditor.theme.DarkTheme;
 import xy.richtexteditor.theme.LightTheme;
@@ -75,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     private static final int REQUEST_WRITE_PERMISSION = 0x103;
 
-    private static final int REQUEST_CAMERAA_AND_WRITR_PERMISSION = 0x104;
+    private static final int REQUEST_CAMERA_AND_WRITE_PERMISSION = 0x104;
 
     private Context mContext;
 
@@ -87,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
     private BottomMenu mBottomMenu;
 
     private HashMap<Long, String> mInsertedImages;
+
     private HashMap<Long, String> mFailedImages;
 
     private Handler mHandler = new Handler(new Handler.Callback() {
@@ -97,21 +88,6 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                     tv_count.setText(msg.arg1 + "字");
                     break;
                 case 2:
-//                    String path = (String) msg.obj;
-//                    upload(path);
-//                    mRichEditor.setImageUploadProcess(id, 80);
-                    break;
-                case 3:
-                    long id = (long) msg.obj;
-//                    Log.d(LOG_TAG, "---" + id);
-//                    mRichEditor.deleteImageById(id);
-//
-//                    String uri = "http://seopic.699pic.com/photo/00013/6254.jpg_wh1200.jpg";
-//                    long ids = SystemClock.currentThreadTimeMillis();
-//                    long size[] = SizeUtils.getBitmapSize(uri);
-//                    mRichEditor.insertImage(uri, ids, 340, 223);
-                    mRichEditor.setImageUploadProcess(id, 100);
-                    mRichEditor.uploadImage(id, "http://seopic.699pic.com/photo/00013/6254.jpg_wh1200.jpg");
                     break;
             }
             return false;
@@ -145,8 +121,13 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         mInsertedImages = new HashMap<>();
         mFailedImages = new HashMap<>();
         mRichEditor.setBottomMenu(mBottomMenu);
+        String str = "Hello!";
+// 在这里使用的是encode方式，返回的是byte类型加密数据，可使用new String转为String类型
+        String strBase64 = new String(Base64.encode(str.getBytes(), Base64.DEFAULT));
+        String str64 = "PGgxPuaWh+eroOWGheWuuTwvaDE+DQo8YnI+DQo8aW1nIHNyYz0iaHR0cDovNDcuNTIuMjI3LjQzL3podXdhaTM2NS9hcGkvdjIvcHVibGljL3VwbG9hZHMvMjAxODA0MDgvYTgxZDBiODcyZGU3NzQxNjcyMjhhYjFjZTcwYmQxMDYuanBnIi8+";
+        String strs = new String(Base64.decode(str64.getBytes(), Base64.DEFAULT));
+        Log.d(LOG_TAG, "--" + strs + "---" + strBase64);
 
-        mRichEditor.setHtml("sseerrrrrr");
     }
 
     private void initListener() {
@@ -203,6 +184,37 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     }
 
+    private void showPictureClickDialog(final PictureDialog dialog, CharSequence[] items) {
+
+        dialog.setOnDialogClickListener(new PictureDialog.OnDialogClickListener() {
+            @Override
+            public void delete(Long id) {
+                mRichEditor.deleteImageById(id);
+                removeFromLocalCache(id);
+
+            }
+
+            @Override
+            public void reload(Long id) {
+                mRichEditor.setImageReload(id);
+                upload(mFailedImages.get(id), id);
+                mInsertedImages.put(id, mFailedImages.get(id));
+                mFailedImages.remove(id);
+            }
+        });
+
+        dialog.setItems(items);
+        dialog.show(getSupportFragmentManager(), PictureDialog.LOG_TAG);
+    }
+
+    private void removeFromLocalCache(long id) {
+        if (mInsertedImages.containsKey(id))
+            mInsertedImages.remove(id);
+        else if (mFailedImages.containsKey(id))
+            mFailedImages.remove(id);
+    }
+
+
     @Override
     public void onLinkButtonClick() {
         showLinkDialog(new LinkDialog(mContext), false);
@@ -222,7 +234,12 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     @Override
     public void onImageClick(Long id) {
-
+        if (mInsertedImages.containsKey(id))
+            showPictureClickDialog(PictureDialog.createPictureDialog(id), new CharSequence[]{getString(R.string.delete)});
+        else if (mFailedImages.containsKey(id)) {
+            showPictureClickDialog(PictureDialog.createPictureDialog(id),
+                    new CharSequence[]{getString(R.string.delete), getString(R.string.retry)});
+        }
     }
 
     @Override
@@ -251,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             case R.id.iv_return:
                 break;
             case R.id.tv_submit:
-                Log.d(LOG_TAG, "---" + mRichEditor.getHtml());
+                mRichEditor.getTitles();
                 break;
         }
     }
@@ -266,16 +283,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             long size[] = SizeUtils.getBitmapSize(path);
             mRichEditor.insertImage(path, id, size[0], size[1]);
             mInsertedImages.put(id, path);
-//            Message message = new Message();
-//            message.obj = path;
-//            message.what = 2;
-//            mHandler.sendMessageDelayed(message, 2000);
-            Log.d(LOG_TAG, "---" + id);
-
-            Message message = new Message();
-            message.obj = id;
-            message.what = 3;
-            mHandler.sendMessageDelayed(message, 2000);
+            upload(path, id);
         }
     }
 
@@ -298,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                 }
 
                 break;
-            case REQUEST_CAMERAA_AND_WRITR_PERMISSION:
+            case REQUEST_CAMERA_AND_WRITE_PERMISSION:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     showImagePicker();
                 } else {
@@ -325,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
-                        REQUEST_CAMERAA_AND_WRITR_PERMISSION);
+                        REQUEST_CAMERA_AND_WRITE_PERMISSION);
                 return false;
             }
         } else {
@@ -333,26 +341,35 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         }
     }
 
-    private void upload(String filePath) {
+    private void upload(final String filePath, final long id) {
         OkGo.<String>post("http://47.52.227.43/zhuwai365/api/v2/public/api.php/Ajax/uploadpic")
                 .tag(this)
                 .params("file", new File(filePath))
                 .execute(new StringCallback() {
                     @Override
                     public void onSuccess(com.lzy.okgo.model.Response<String> response) {
+                        mRichEditor.setImageUploadProcess(id, 100);
+                        Log.d(LOG_TAG, "-----" + response.body());
 
                     }
 
                     @Override
                     public void uploadProgress(Progress progress) {
                         super.uploadProgress(progress);
+                        Log.d(LOG_TAG, "-----" + (int) progress.fraction * 100);
+//                        mRichEditor.setImageUploadProcess(id, (int) progress.fraction * 100);
                     }
 
                     @Override
                     public void onError(com.lzy.okgo.model.Response<String> response) {
                         super.onError(response);
+                        Log.d(LOG_TAG, "----" + response.body());
+                        mRichEditor.setImageFailed(id);
+                        mInsertedImages.remove(id);
+                        mFailedImages.put(id, filePath);
                     }
                 });
+
     }
 
     //针对知乎图片选择框架拍照返回获取不到path
