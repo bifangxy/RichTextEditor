@@ -109,10 +109,10 @@ public class Utils {
 
     /**
      * @param color 处理的颜色
-     * @param i 处理的步长
-     * @return  处理完后较深的颜色
+     * @param i     处理的步长
+     * @return 处理完后较深的颜色
      */
-    public static int getDarkerColor(int color , @FloatRange(from = 0,to = 1) float i){
+    public static int getDarkerColor(int color, @FloatRange(from = 0, to = 1) float i) {
         float redrate = 0.299f;
         float greenrate = 0.587f;
         float bluerate = 0.114f;
@@ -121,8 +121,22 @@ public class Utils {
         int green = (color >> 8) & 0xFF;
         int blue = color & 0xFF;
 
-        return Color.rgb((int) Math.max(red - redrate * i * 0xFF,0),
-                (int) Math.max(green - greenrate * i * 0xFF,0),
-                (int) Math.max(blue - bluerate * i *0xFF , 0));
+        return Color.rgb((int) Math.max(red - redrate * i * 0xFF, 0),
+                (int) Math.max(green - greenrate * i * 0xFF, 0),
+                (int) Math.max(blue - bluerate * i * 0xFF, 0));
+    }
+
+    /**
+     * Base64解码
+     *
+     * @param str
+     * @return
+     */
+    public static String Base64decode(String str) {
+        return new String(Base64.decode(str.getBytes(), Base64.DEFAULT));
+    }
+
+    public static String Base64encode(String str) {
+        return new String(Base64.encode(str.getBytes(), Base64.DEFAULT));
     }
 }

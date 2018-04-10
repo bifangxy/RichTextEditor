@@ -157,7 +157,7 @@ var RE = {
 
 		_self.cache.editor.addEventListener('input', function () {
 			AndroidInterface.staticWords(_self.staticWords());
-			AndroidInterface.setHtmlContent(_self.getHtml());
+			AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
 		}, false);
 	},
 	initCache: function initCache() {
@@ -258,7 +258,7 @@ var RE = {
 		} else {
 			if (evt.which == 8) {
 				AndroidInterface.staticWords(_self.staticWords());
-				AndroidInterface.setHtmlContent(_self.getHtml());
+				AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
 			}
 			var items = [];
 			_self.commandSet.forEach(function (item) {
@@ -274,9 +274,13 @@ var RE = {
 	},
 	insertHtml: function insertHtml(html) {
 		var _self = this;
-		console.log(html)
 		document.execCommand('insertHTML', false, html);
 	},
+	insertHtmlTitle: function insertHtmlTitle(title) {
+    		var _self = this;
+            _self.cache.title.value = title;
+    	},
+
 	setBackgroundColor: function setBackgroundColor(color) {
 	    var _self = this;
 	    document.body.style.backgroundColor = color;
@@ -329,7 +333,7 @@ var RE = {
 			newWidth = width;
 			newHeight = height;
 		}
-		var image = '<div><br></div><div class="block">\n\t\t\t\t<div class="img-block"><div style="width: ' + newWidth + 'px" class="process">\n\t\t\t\t\t<div class="fill">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<img class="images" data-id="' + id + '" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px;" src="' + url + '"/>\n\t\t\t\t<div class="cover" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px; margin-left: '+(- 1/2 * newWidth)+'px;"></div>\n\t\t\t\t<div class="delete">\n\t\t\t\t\t<img src="./reload.png">\n\t\t\t\t\t<div class="tips">\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8BF7\u70B9\u51FB\u91CD\u8BD5</div>\n\t\t\t\t</div>\n\t\t\t\t<input type="text" placeholder="\u8BF7\u8F93\u5165\u56FE\u7247\u540D\u5B57" data-value=""></div>\n\t\t\t</div><div><br></div>';
+		var image = '<div><br></div><div class="block">\n\t\t\t\t<div class="img-block"><div style="width: ' + newWidth + 'px" class="process">\n\t\t\t\t\t<div class="fill">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<img class="images" data-id="' + id + '" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px;" src="' + url + '"/><div class="cover" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px; margin-left: '+(- 1/2 * newWidth)+'px;"></div><div class="delete"><img src="./reload.png"><div class="tips">\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8BF7\u70B9\u51FB\u91CD\u8BD5</div>\n\t\t\t\t</div></div>\n\t\t\t\t<input type="text" placeholder="\u8BF7\u8F93\u5165\u56FE\u7247\u540D\u5B57" data-value="">\n\t\t\t</div><div><br></div>';
 		_self.insertHtml(image);
 		var img = document.querySelector('img[data-id="' + id + '"]');
 		var imgBlock = img.parentNode;
@@ -341,7 +345,8 @@ var RE = {
 			var id = img.getAttribute('data-id');
 			window.location.href = _self.schemeCache.IMAGE_SCHEME + encodeURI(id);
 		}, false);
-		var input = imgBlock.querySelector('input');
+		var block = imgBlock.parentNode;
+		var input = block.querySelector('input');
 		input.addEventListener('input', function (e) {
 			input.setAttribute('data-value', e.target.value);
 		}, false);
@@ -377,7 +382,7 @@ var RE = {
 	},
 	uploadImage: function uploadImage(id,url) {
 	        var _self = this;
-//    		_self.imageCache.remove(id);
+    		_self.imageCache.remove(id);
     		var img = document.querySelector('img[data-id="' + id + '"]');
     		img.src = url;
     		var imgBlock = img.parentNode;

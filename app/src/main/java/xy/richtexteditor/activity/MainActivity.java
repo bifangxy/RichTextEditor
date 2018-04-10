@@ -1,6 +1,7 @@
 package xy.richtexteditor.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -25,9 +27,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.TypeReference;
 import com.lzy.okgo.OkGo;
-import com.lzy.okgo.adapter.Call;
-import com.lzy.okgo.callback.Callback;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Progress;
 import com.lzy.okgo.model.Response;
@@ -36,11 +37,17 @@ import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
 import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import xy.richtexteditor.R;
+import xy.richtexteditor.data.ResponseData;
+import xy.richtexteditor.data.Url;
 import xy.richtexteditor.dialog.LinkDialog;
 import xy.richtexteditor.dialog.PictureDialog;
 import xy.richtexteditor.theme.BaseTheme;
@@ -48,6 +55,8 @@ import xy.richtexteditor.theme.DarkTheme;
 import xy.richtexteditor.theme.LightTheme;
 import xy.richtexteditor.utils.RealPathFromUriUtils;
 import xy.richtexteditor.utils.SizeUtils;
+import xy.richtexteditor.utils.StringEscapeUtil;
+import xy.richtexteditor.utils.Utils;
 import xy.richtexteditor.view.bottommenu.BottomMenu;
 import xy.richtexteditor.view.richeditor.MyRichEditor;
 import xy.richtexteditor.view.richeditor.RichEditor;
@@ -67,6 +76,10 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     private static final int REQUEST_CAMERA_AND_WRITE_PERMISSION = 0x104;
 
+    private static final String UPLOAD_IMAGE_URL = "http://47.52.227.43/zhuwai365/api/v2/public/api.php/Ajax/uploadpic";
+
+    private static final String PARME_NAME = "file";
+
     private Context mContext;
 
     private LinearLayout ll_title_bar;
@@ -80,14 +93,14 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     private HashMap<Long, String> mFailedImages;
 
+    private HashMap<String, String> mPathAndUri;
+
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
                     tv_count.setText(msg.arg1 + "字");
-                    break;
-                case 2:
                     break;
             }
             return false;
@@ -117,17 +130,14 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
 
     }
 
+    @SuppressLint("UseSparseArrays")
     private void initData() {
         mInsertedImages = new HashMap<>();
         mFailedImages = new HashMap<>();
+        mPathAndUri = new HashMap<>();
         mRichEditor.setBottomMenu(mBottomMenu);
-        String str = "Hello!";
-// 在这里使用的是encode方式，返回的是byte类型加密数据，可使用new String转为String类型
-        String strBase64 = new String(Base64.encode(str.getBytes(), Base64.DEFAULT));
-        String str64 = "PGgxPuaWh+eroOWGheWuuTwvaDE+DQo8YnI+DQo8aW1nIHNyYz0iaHR0cDovNDcuNTIuMjI3LjQzL3podXdhaTM2NS9hcGkvdjIvcHVibGljL3VwbG9hZHMvMjAxODA0MDgvYTgxZDBiODcyZGU3NzQxNjcyMjhhYjFjZTcwYmQxMDYuanBnIi8+";
-        String strs = new String(Base64.decode(str64.getBytes(), Base64.DEFAULT));
-        Log.d(LOG_TAG, "--" + strs + "---" + strBase64);
 
+        mHandler.sendEmptyMessageDelayed(2, 1000);
     }
 
     private void initListener() {
@@ -197,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             @Override
             public void reload(Long id) {
                 mRichEditor.setImageReload(id);
-                upload(mFailedImages.get(id), id);
+                uploadFile(mFailedImages.get(id), id);
                 mInsertedImages.put(id, mFailedImages.get(id));
                 mFailedImages.remove(id);
             }
@@ -266,9 +276,28 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.iv_return:
+                finish();
                 break;
             case R.id.tv_submit:
-                mRichEditor.getTitles();
+                String title = mRichEditor.getHtmlTitle();
+                if (!TextUtils.isEmpty(title)) {
+                    if (mFailedImages.size() == 0) {
+                        String htmlContent = mRichEditor.getHtml();
+                        Iterator iter = mPathAndUri.entrySet().iterator();
+                        while (iter.hasNext()) {
+                            Map.Entry entry = (Map.Entry) iter.next();
+                            String key = (String) entry.getKey();
+                            String val = (String) entry.getValue();
+                            htmlContent = htmlContent.replace(key, val);
+                        }
+                        String strBase64 = Utils.Base64encode(htmlContent);
+                        submitArticle(strBase64, title);
+                    } else {
+                        Toast.makeText(mContext, "您还有未上传的图片", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(mContext, "请填写标题", Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
     }
@@ -283,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
             long size[] = SizeUtils.getBitmapSize(path);
             mRichEditor.insertImage(path, id, size[0], size[1]);
             mInsertedImages.put(id, path);
-            upload(path, id);
+            uploadFile(path, id);
         }
     }
 
@@ -341,32 +370,81 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         }
     }
 
-    private void upload(final String filePath, final long id) {
-        OkGo.<String>post("http://47.52.227.43/zhuwai365/api/v2/public/api.php/Ajax/uploadpic")
+    private void uploadFile(final String filePath, final long id) {
+        OkGo.<String>post(UPLOAD_IMAGE_URL)
                 .tag(this)
-                .params("file", new File(filePath))
+                .params(PARME_NAME, new File(filePath))
                 .execute(new StringCallback() {
                     @Override
                     public void onSuccess(com.lzy.okgo.model.Response<String> response) {
-                        mRichEditor.setImageUploadProcess(id, 100);
-                        Log.d(LOG_TAG, "-----" + response.body());
-
+                        ResponseData<Url> data = com.alibaba.fastjson.JSONObject.parseObject(response.body(), new TypeReference<ResponseData<Url>>() {
+                        }.getType());
+                        if (data != null) {
+                            if (data.getCode() == 200) {
+                                mRichEditor.setImageUploadProcess(id, 100);
+                                mPathAndUri.put(filePath, data.getRows().getUrl());
+                            } else {
+                                mRichEditor.setImageFailed(id);
+                                mInsertedImages.remove(id);
+                                mFailedImages.put(id, filePath);
+                            }
+                        }
                     }
 
                     @Override
                     public void uploadProgress(Progress progress) {
                         super.uploadProgress(progress);
-                        Log.d(LOG_TAG, "-----" + (int) progress.fraction * 100);
-//                        mRichEditor.setImageUploadProcess(id, (int) progress.fraction * 100);
+                        if (progress.fraction != 1) {
+                            mRichEditor.setImageUploadProcess(id, (int) (progress.fraction * 100));
+                        }
                     }
 
                     @Override
                     public void onError(com.lzy.okgo.model.Response<String> response) {
                         super.onError(response);
-                        Log.d(LOG_TAG, "----" + response.body());
                         mRichEditor.setImageFailed(id);
                         mInsertedImages.remove(id);
                         mFailedImages.put(id, filePath);
+                    }
+                });
+
+    }
+
+    private void submitArticle(String content, String title) {
+        Map<String, String> params = new HashMap<>();
+        params.put("id", "0");
+        params.put("title", title);
+        params.put("content", content);
+        params.put("userid", "1");
+        params.put("forumid", "3");
+        params.put("source", "原创");
+        params.put("state", "1");
+        JSONObject jsonObject = new JSONObject(params);
+        OkGo.<String>post("http://47.52.227.43/zhuwai365/api/v2/public/api.php/Article/release")
+                .tag(this)
+                .upJson(jsonObject)
+                .execute(new StringCallback() {
+                    @Override
+                    public void onSuccess(Response<String> response) {
+                        Log.d(LOG_TAG, "Success" + response.body());
+                        ResponseData responseData = com.alibaba.fastjson.JSONObject.parseObject(response.body(), ResponseData.class);
+                        if (responseData.getCode() == 200) {
+                            Toast.makeText(mContext, "提交成功", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(mContext, "提交失败", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Response<String> response) {
+                        super.onError(response);
+                        Toast.makeText(mContext, "提交失败", Toast.LENGTH_SHORT).show();
+                        Log.d(LOG_TAG, "Fail" + response.body());
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        super.onFinish();
                     }
                 });
 
@@ -395,4 +473,6 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         }
         return path;
     }
+
+
 }

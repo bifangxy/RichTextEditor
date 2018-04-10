@@ -55,6 +55,8 @@ public class RichEditor extends WebView {
 
     private String mContent;
 
+    private String mTitle;
+
     private long mContentLength;
 
     private String returnValue;
@@ -176,6 +178,10 @@ public class RichEditor extends WebView {
         return mContent;
     }
 
+    public String getHtmlTitle() {
+        return mTitle;
+    }
+
     public long getContentLength() {
         return mContentLength;
     }
@@ -222,6 +228,10 @@ public class RichEditor extends WebView {
 
     public void setHtml(String html) {
         exec("javascript:RE.insertHtml('" + html + "');");
+    }
+
+    public void setHtmlTitle(String title) {
+        exec("javascript:RE.insertHtmlTitle('" + title + "');");
     }
 
     public void getTitles() {
@@ -413,8 +423,9 @@ public class RichEditor extends WebView {
         }
 
         @JavascriptInterface
-        public void setHtmlContent(String htmlContent) {
+        public void setHtmlContent(String htmlContent, String title) {
             mContent = htmlContent;
+            mTitle = title;
             if (mTextChangeListener != null) {
                 mTextChangeListener.onTextChange(htmlContent);
             }

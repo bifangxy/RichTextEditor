@@ -66,10 +66,10 @@ public class RealPathFromUriUtils {
                 filePath = getDataColumn(context, contentUri, null, null);
             }
         } else if ("content".equalsIgnoreCase(uri.getScheme())) {
-            // 如果是 content 类型的 Uri
+            // 如果是 content 类型的 Url
             filePath = getDataColumn(context, uri, null, null);
         } else if ("file".equals(uri.getScheme())) {
-            // 如果是 file 类型的 Uri,直接获取图片对应的路径
+            // 如果是 file 类型的 Url,直接获取图片对应的路径
             filePath = uri.getPath();
         }
         return filePath;
@@ -100,16 +100,16 @@ public class RealPathFromUriUtils {
     }
 
     /**
-     * @param uri the Uri to check
-     * @return Whether the Uri authority is MediaProvider
+     * @param uri the Url to check
+     * @return Whether the Url authority is MediaProvider
      */
     private static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
     /**
-     * @param uri the Uri to check
-     * @return Whether the Uri authority is DownloadsProvider
+     * @param uri the Url to check
+     * @return Whether the Url authority is DownloadsProvider
      */
     private static boolean isDownloadsDocument(Uri uri) {
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
