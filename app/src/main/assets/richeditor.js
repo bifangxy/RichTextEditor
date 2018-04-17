@@ -159,6 +159,12 @@ var RE = {
 			AndroidInterface.staticWords(_self.staticWords());
 			AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
 		}, false);
+
+		_self.cache.title.addEventListener('input', function () {
+        			AndroidInterface.staticWords(_self.staticWords());
+        			AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
+        		}, false);
+
 	},
 	initCache: function initCache() {
 		var _self = this;
@@ -319,6 +325,7 @@ var RE = {
 		range.setStart(startContainer, len);
 		range.setEnd(endContainer, len);
 		selection.addRange(range);
+		AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
 	},
 	insertImage: function insertImage(url, id, width, height) {
 		var _self = this;
@@ -365,6 +372,7 @@ var RE = {
 			imgBlock.removeChild(cover);
 			imgBlock.removeChild(process);
 			imgBlock.removeChild(deleteImage);
+			AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
 		}
 
 	},
