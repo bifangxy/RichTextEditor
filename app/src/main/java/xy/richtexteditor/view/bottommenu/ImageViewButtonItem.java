@@ -57,7 +57,6 @@ public class ImageViewButtonItem extends AbstractBottomMenuItem<ImageButton> imp
         }
         imageButton.setImageResource(idRes);
         imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-
         return imageButton;
     }
 

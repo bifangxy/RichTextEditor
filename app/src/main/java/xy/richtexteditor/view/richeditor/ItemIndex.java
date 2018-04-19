@@ -28,9 +28,11 @@ public class ItemIndex {
     public static final long HALVING_LINE = 0x0e;
     public static final long LINK = 0x0f;
     public static final long THEME = 0x10;
+    public static final long LEFT = 0x11;
+    public static final long CENTER = 0x12;
 
     private long[] defaultItems = {INSERT_IMAGE, A, MORE, UNDO, REDO, BOLD, ITALIC,
-            STRIKE_THROUGH, BLOCK_QUOTE, H1, H2, H3, H4, HALVING_LINE, LINK, THEME};
+            STRIKE_THROUGH, BLOCK_QUOTE, H1, H2, H3, H4, HALVING_LINE, LINK, THEME, LEFT, CENTER};
 
     private final static ItemIndex instance = new ItemIndex();
 

@@ -243,6 +243,16 @@ public class RichEditor extends WebView {
         exec("javascript:RE.exec('italic');");
     }
 
+    public void setLeft() {
+        exec("javascript:RE.saveRange();");
+        exec("javascript:RE.exec('justifyLeft');");
+    }
+
+    public void setCenter() {
+        exec("javascript:RE.saveRange();");
+        exec("javascript:RE.exec('justifyCenter');");
+    }
+
     public void setStrikeThrough() {
         exec("javascript:RE.saveRange()");
         exec("javascript:RE.exec('strikethrough');");
@@ -308,6 +318,10 @@ public class RichEditor extends WebView {
 
     public void setImageFailed(long id) {
         exec("javascript:RE.uploadFailure(" + id + ");");
+    }
+
+    public void removeInput(long id) {
+        exec("javascript:RE.removeTips(" + id + ");");
     }
 
     public void setImageReload(long id) {

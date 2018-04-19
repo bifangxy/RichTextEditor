@@ -69,6 +69,16 @@ public class SelectController {
         }
     }
 
+    public void changeLeftState(long id) {
+        if (id == ItemIndex.LEFT) {
+            handler.handleA2B(ItemIndex.LEFT);
+            handler.handleB2A(ItemIndex.CENTER);
+        } else if (id == ItemIndex.CENTER) {
+            handler.handleA2B(ItemIndex.CENTER);
+            handler.handleB2A(ItemIndex.LEFT);
+        }
+    }
+
     public void reset() {
         moveAll2StateA();
     }

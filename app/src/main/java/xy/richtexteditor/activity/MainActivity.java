@@ -17,9 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -55,9 +53,13 @@ import xy.richtexteditor.theme.DarkTheme;
 import xy.richtexteditor.theme.LightTheme;
 import xy.richtexteditor.utils.RealPathFromUriUtils;
 import xy.richtexteditor.utils.SizeUtils;
-import xy.richtexteditor.utils.StringEscapeUtil;
 import xy.richtexteditor.utils.Utils;
 import xy.richtexteditor.view.bottommenu.BottomMenu;
+import xy.richtexteditor.view.bottommenu.IBottomMenuItem;
+import xy.richtexteditor.view.bottommenu.ImageViewButtonItem;
+import xy.richtexteditor.view.bottommenu.MenuItem;
+import xy.richtexteditor.view.bottommenu.MenuItemFactory;
+import xy.richtexteditor.view.richeditor.ItemIndex;
 import xy.richtexteditor.view.richeditor.MyRichEditor;
 import xy.richtexteditor.view.richeditor.RichEditor;
 
@@ -102,6 +104,19 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                 case 1:
                     tv_count.setText(msg.arg1 + "字");
                     break;
+                case 3:
+                    String htmlContent = mRichEditor.getHtml();
+                    Log.d(LOG_TAG, htmlContent);
+                    Iterator iter = mPathAndUri.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        Map.Entry entry = (Map.Entry) iter.next();
+                        String key = (String) entry.getKey();
+                        String val = (String) entry.getValue();
+                        htmlContent = htmlContent.replace(key, val);
+                    }
+                    String strBase64 = Utils.Base64encode(htmlContent);
+                    submitArticle(strBase64, mRichEditor.getHtmlTitle());
+                    break;
             }
             return false;
         }
@@ -136,7 +151,6 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         mFailedImages = new HashMap<>();
         mPathAndUri = new HashMap<>();
         mRichEditor.setBottomMenu(mBottomMenu);
-
         mHandler.sendEmptyMessageDelayed(2, 1000);
     }
 
@@ -282,16 +296,15 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                 String title = mRichEditor.getHtmlTitle();
                 if (!TextUtils.isEmpty(title)) {
                     if (mFailedImages.size() == 0) {
-                        String htmlContent = mRichEditor.getHtml();
-                        Iterator iter = mPathAndUri.entrySet().iterator();
-                        while (iter.hasNext()) {
-                            Map.Entry entry = (Map.Entry) iter.next();
-                            String key = (String) entry.getKey();
-                            String val = (String) entry.getValue();
-                            htmlContent = htmlContent.replace(key, val);
+                        Iterator iterator = mInsertedImages.entrySet().iterator();
+                        while (iterator.hasNext()) {
+                            Map.Entry entry = (Map.Entry) iterator.next();
+                            Long key = (Long) entry.getKey();
+                            mRichEditor.removeInput(key);
                         }
-                        String strBase64 = Utils.Base64encode(htmlContent);
-                        submitArticle(strBase64, title);
+                        //延时1s获取htmlContent,防止input内容没有更新完;
+                        mHandler.sendEmptyMessageDelayed(3, 1000);
+
                     } else {
                         Toast.makeText(mContext, "您还有未上传的图片", Toast.LENGTH_SHORT).show();
                     }
@@ -376,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                 .params(PARME_NAME, new File(filePath))
                 .execute(new StringCallback() {
                     @Override
-                    public void onSuccess(com.lzy.okgo.model.Response<String> response) {
+                    public void onSuccess(Response<String> response) {
                         ResponseData<Url> data = com.alibaba.fastjson.JSONObject.parseObject(response.body(), new TypeReference<ResponseData<Url>>() {
                         }.getType());
                         if (data != null) {
@@ -400,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
                     }
 
                     @Override
-                    public void onError(com.lzy.okgo.model.Response<String> response) {
+                    public void onError(Response<String> response) {
                         super.onError(response);
                         mRichEditor.setImageFailed(id);
                         mInsertedImages.remove(id);
@@ -415,7 +428,7 @@ public class MainActivity extends AppCompatActivity implements MyRichEditor.OnEd
         params.put("id", "0");
         params.put("title", title);
         params.put("content", content);
-        params.put("userid", "1");
+        params.put("userid", "25");
         params.put("forumid", "3");
         params.put("source", "原创");
         params.put("state", "1");

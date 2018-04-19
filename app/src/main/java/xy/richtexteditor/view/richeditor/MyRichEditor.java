@@ -65,7 +65,7 @@ public class MyRichEditor extends RichEditor {
         mFreeItem = new ArrayList<>();
 
         addImageInsert();
-        addTypefaceBranch(true, true, true, true, true);
+        addTypefaceBranch(true, true, true, true, true, true, true);
         addMoreBranch(true, true);
         addUndo();
         addRedo();
@@ -149,9 +149,9 @@ public class MyRichEditor extends RichEditor {
         });
     }
 
-    public MyRichEditor addTypefaceBranch(boolean needBold, boolean needItalic, boolean needStrikeThrough, boolean needBlockQuote, boolean needH) {
+    public MyRichEditor addTypefaceBranch(boolean needBold, boolean needItalic, boolean needStrikeThrough, boolean needBlockQuote, boolean needH, boolean needLeft, boolean needCenter) {
         checkNull(mMultiBottomMenu);
-        if (!(needBold || needItalic || needStrikeThrough || needBlockQuote || needH))
+        if (!(needBold || needItalic || needStrikeThrough || needBlockQuote || needH || needLeft || needCenter))
             return this;
         if (needBlockQuote)
             mSelectController.add(ItemIndex.BLOCK_QUOTE);
@@ -161,6 +161,10 @@ public class MyRichEditor extends RichEditor {
             mFreeItem.add(ItemIndex.BOLD);
         if (needItalic)
             mFreeItem.add(ItemIndex.ITALIC);
+        if (needLeft)
+            mFreeItem.add(ItemIndex.LEFT);
+        if (needCenter)
+            mFreeItem.add(ItemIndex.CENTER);
         if (needStrikeThrough)
             mFreeItem.add(ItemIndex.STRIKE_THROUGH);
         mMultiBottomMenu.addRootItem(getBaseItemFactory().generateItem(getContext(), ItemIndex.A))
@@ -204,6 +208,29 @@ public class MyRichEditor extends RichEditor {
                             @Override
                             public boolean onItemClick(MenuItem item, boolean isSelected) {
                                 setBlockquote(!isSelected);
+                                return isInSelectedController(item.getId());
+                            }
+                        }
+                ) : null)
+                .addItem(ItemIndex.A, needLeft ? getBaseItemFactory().generateItem(
+                        getContext(),
+                        ItemIndex.LEFT,
+                        new IBottomMenuItem.OnBottomItemClickListener() {
+                            @Override
+                            public boolean onItemClick(MenuItem item, boolean isSelected) {
+                                setLeft();
+
+                                return isInSelectedController(item.getId());
+                            }
+                        }
+                ) : null)
+                .addItem(ItemIndex.A, needLeft ? getBaseItemFactory().generateItem(
+                        getContext(),
+                        ItemIndex.CENTER,
+                        new IBottomMenuItem.OnBottomItemClickListener() {
+                            @Override
+                            public boolean onItemClick(MenuItem item, boolean isSelected) {
+                                setCenter();
                                 return isInSelectedController(item.getId());
                             }
                         }
@@ -458,6 +485,9 @@ public class MyRichEditor extends RichEditor {
     private boolean isInSelectedController(long id) {
         if (mSelectController.contain(id)) {
             mSelectController.changeState(id);
+            return true;
+        } else if (id == ItemIndex.LEFT || id == ItemIndex.CENTER) {
+            mSelectController.changeLeftState(id);
             return true;
         }
         return false;

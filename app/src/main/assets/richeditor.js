@@ -100,7 +100,7 @@ var RE = {
 		currentLink: null,
 		line: null
 	},
-	commandSet: ['bold', 'italic', 'strikethrough', 'redo', 'undo'],
+	commandSet: ['bold', 'italic', 'strikethrough', 'redo', 'undo','justifyLeft','justifyCenter'],
 	schemeCache: {
 		FOCUS_SCHEME: 'focus://',
 		CHANGE_SCHEME: 'change://',
@@ -340,7 +340,7 @@ var RE = {
 			newWidth = width;
 			newHeight = height;
 		}
-		var image = '<div><br></div><div class="block">\n\t\t\t\t<div class="img-block"><div style="width: ' + newWidth + 'px" class="process">\n\t\t\t\t\t<div class="fill">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<img class="images" data-id="' + id + '" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px;" src="' + url + '"/><div class="cover" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px; margin-left: '+(- 1/2 * newWidth)+'px;"></div><div class="delete"><img src="./reload.png"><div class="tips">\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8BF7\u70B9\u51FB\u91CD\u8BD5</div>\n\t\t\t\t</div></div>\n\t\t\t\t<input type="text" placeholder="\u8BF7\u8F93\u5165\u56FE\u7247\u540D\u5B57" data-value="">\n\t\t\t</div><div><br></div>';
+		var image = '<div><br></div><div class="block" align="center">\n\t\t\t\t<div class="img-block"><div style="width: ' + newWidth + 'px" class="process">\n\t\t\t\t\t<div class="fill">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<img class="images" data-id="' + id + '" style="width: ' + newWidth + 'px; " src="' + url + '"/><div class="cover" style="width: ' + newWidth + 'px; height: ' + newHeight + 'px; margin-left: '+(- 1/2 * newWidth)+'px;"></div><div class="delete"><img src="./reload.png"><div class="tips">\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8BF7\u70B9\u51FB\u91CD\u8BD5</div>\n\t\t\t\t</div></div>\n\t\t\t\t<input type="text" placeholder="\u8BF7\u8F93\u5165\u56FE\u7247\u540D\u5B57" data-value=""><div class="input_data" style="color:#ddd"></div></div><div><br></div>';
 		_self.insertHtml(image);
 		var img = document.querySelector('img[data-id="' + id + '"]');
 		var imgBlock = img.parentNode;
@@ -368,7 +368,7 @@ var RE = {
 			var cover = block.querySelector('.cover');
 			var process = block.querySelector('.process');
 			var imgBlock = block.querySelector('.img-block');
-			var deleteImage = block.querySelector('.delete')
+			var deleteImage = block.querySelector('.delete');
 			imgBlock.removeChild(cover);
 			imgBlock.removeChild(process);
 			imgBlock.removeChild(deleteImage);
@@ -382,6 +382,20 @@ var RE = {
 		block.parentNode.removeChild(block);
 		_self.imageCache.remove(id);
 	},
+	removeTips: function removeTips(id) {
+    	var _self = this;
+    	var block = _self.imageCache.get(id);
+    	var input = block.querySelector('input');
+    	var input_data = block.querySelector('.input_data');
+    	var value  = input.getAttribute('data-value');
+        block.removeChild(input);
+    	if(value==''){
+    	input_data.innerHTML='图片来自驻外';
+    	}else{
+    	input_data.innerHTML=value;
+    	}
+    	AndroidInterface.setHtmlContent(_self.getHtml(),_self.cache.title.value);
+    },
 	uploadFailure: function uploadFailure(id) {
 		var _self = this;
 		var block = _self.imageCache.get(id);

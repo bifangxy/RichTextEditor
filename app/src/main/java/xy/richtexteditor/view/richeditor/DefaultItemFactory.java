@@ -61,6 +61,18 @@ public class DefaultItemFactory extends BaseItemFactory<ImageViewButtonItem> {
         return item;
     }
 
+    protected ImageViewButtonItem generateLeftItem(Context context, IBottomMenuItem.OnBottomItemClickListener listener) {
+        ImageViewButtonItem item = generateAutoSetItem(context, ItemIndex.LEFT, R.drawable.icon_left);
+        item.setOnItemCLickListener(listener);
+        return item;
+    }
+
+    protected ImageViewButtonItem generateCenterItem(Context context, IBottomMenuItem.OnBottomItemClickListener listener) {
+        ImageViewButtonItem item = generateAutoSetItem(context, ItemIndex.CENTER, R.drawable.icon_center);
+        item.setOnItemCLickListener(listener);
+        return item;
+    }
+
     protected ImageViewButtonItem generateStrikeThroughItem(Context context, IBottomMenuItem.OnBottomItemClickListener listener) {
         ImageViewButtonItem item = generateAutoSetItem(context, ItemIndex.STRIKE_THROUGH, R.drawable.strikethrough);
         item.setOnItemCLickListener(listener);
@@ -147,6 +159,10 @@ public class DefaultItemFactory extends BaseItemFactory<ImageViewButtonItem> {
                 return generateLinkItem(context, listener);
             case (int) ItemIndex.THEME:
                 return generateThemeItem(context, listener);
+            case (int) ItemIndex.LEFT:
+                return generateLeftItem(context, listener);
+            case (int) ItemIndex.CENTER:
+                return generateCenterItem(context, listener);
             default:
                 return null;
         }
